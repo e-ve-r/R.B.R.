@@ -1,6 +1,10 @@
-data/
+.venv/
+__pycache__/
 node_modules/
 dist/
-__pycache__/
-.pytest_cache/
-.venv/
+benchmark/data/
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.synctex.gz
+.DS_Store

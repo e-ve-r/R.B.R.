@@ -1,16 +1,22 @@
-# LongBench MultiFieldQA-en pilot results
+# Fresh LongBench pilot
 
-A seeded sample of 10 examples from the 122 contexts containing at least 2,000 words. Sample context lengths: 2,076–7,551 words (median 2,831). Generator: local `llama3.2:latest` (Ollama model ID `a80c4f17acd5`); embedding model `nomic-embed-text:latest` (ID `0a109f422b47`).
+Ten questions, seed 2026, sampled from 109 eligible 2,000–8,000-word contexts. Observed sample: 2,279–7,293 words. Models: llama3.2 and nomic-embed-text, Ollama 0.24.0, Apple M2, 16 GiB. No historical prototype scores are reused.
 
-| Method | Mean answer token F1 | Mean words passed to generator | Mean model calls | Median generator time |
-|---|---:|---:|---:|---:|
-| BM25 | 28.67% | 2,037 | 1.0 | 11.52 s |
-| Dense cosine | 29.75% | 2,040 | 1.0 | 8.67 s |
-| Dense/lexical hybrid | 26.45% | 2,037 | 1.0 | 5.68 s |
-| RBER-style boundary peeling | 27.21% | 1,837 | 3.4 | 13.41 s |
+| Method | Mean F1 | Mean exact match | Mean answer calls | Median total seconds | Mean prompt tokens |
+|---|---:|---:|---:|---:|---:|
+| Original RBR | 21.03% | 0.00% | 2.10 | 10.81 | 2380.6 |
+| Direct prompting | 16.95% | 0.00% | 1.00 | 31.72 | 6639.8 |
+| BM25 | 22.49% | 0.00% | 1.00 | 13.42 | 3332.3 |
+| Dense cosine | 26.18% | 0.00% | 1.00 | 15.29 | 3381.2 |
 
-Token F1 is overlap with the best reference after LongBench-style normalization. It is not exact match, evidence precision, or factuality. Three of ten baseline contexts contained an exact normalized reference answer string for each retrieval method; this is a very weak proxy for evidence recall, particularly for reference answers that summarize the text. NOT_FOUND responses were 4/10, 4/10, 5/10, and 5/10 respectively. Results are too small to establish a ranking or statistical significance.
+RBR had higher observed F1 and lower median total time than direct prompting in this sample. Dense retrieval had the highest observed F1. These ten examples do not establish a stable ranking. All methods use the same base generation instructions and per-call settings, but RBR can use multiple calls and its final core receives inspection notes. Total budgets differ.
 
-The baseline methods each use at most eight overlapping passages and one model call. The RBER-style method uses the current backend boundary evaluator and boolean early stopping over recursively exposed thirds, but operates directly on original words; it does not run the backend's reconstruction, relevance-score bookkeeping, or HTTP layer. The paper's confidence threshold is represented by the implementation's binary response heuristic, not a calibrated probability. Prompts, context windows, and output limits differ between the RBER-style and baseline conditions. Fixed execution order and caching make measured times especially unsuitable for speed conclusions. Context words include repeated overlaps and calls, not model tokens. These measurements omit indexing, embedding, retrieval scoring, and network/service overhead outside calls. No full-context baseline, full application evaluation, human evidence annotation, confidence interval, or independent statistical test was performed.
+Times include embedding and scoring as well as generation; they are affected by warm-up, model loading, service caches and local machine activity. F1 is reference-word overlap, not evidence accuracy. No method achieved exact match on this sample.
 
-See README.md in this directory for data, checksum, methodology, and reproduction command. Full per-case predictions are in results.json.
+Paired bootstrap intervals for RBR minus each baseline (F1 percentage points):
+
+- Direct prompting: 4.09 points; descriptive 95% interval [-16.03, 24.01].
+- BM25: -1.45 points; descriptive 95% interval [-16.17, 11.32].
+- Dense cosine: -5.15 points; descriptive 95% interval [-27.31, 15.84].
+
+See `results.json` for predictions, IDs, settings, token counts, model digests and hashes. See `README.md` for the full protocol and limitations.
